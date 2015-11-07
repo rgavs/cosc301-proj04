@@ -118,7 +118,7 @@ void            userinit(void);
 int             wait(void);
 void            wakeup(void*);
 void            yield(void);
-void            clone(void(*fcn)(void*), void *arg, void *stack);
+int             clone(void(*fcn)(void*), void*, void*);
 
 // swtch.S
 void            swtch(struct context**, struct context*);

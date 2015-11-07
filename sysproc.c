@@ -61,7 +61,7 @@ sys_sleep(void)
 {
   int n;
   uint ticks0;
-  
+
   if(argint(0, &n) < 0)
     return -1;
   acquire(&tickslock);
@@ -83,9 +83,24 @@ int
 sys_uptime(void)
 {
   uint xticks;
-  
+
   acquire(&tickslock);
   xticks = ticks;
   release(&tickslock);
   return xticks;
+}
+
+int
+sys_clone(void){
+    int arg, fcn, stack;
+    if (argint(2, &stack) < 0) {
+	       return -1;
+    }
+    if (argint(1, &arg) < 0) {
+    	return -1;
+    }
+    if (argint(0, &fcn) < 0) {
+    	return -1;
+    }
+    return clone((void *)&fcn, &arg, &stack);
 }

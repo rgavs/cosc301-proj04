@@ -95,6 +95,7 @@ userinit(void)
   p->tf->eflags = FL_IF;
   p->tf->esp = PGSIZE;
   p->tf->eip = 0;  // beginning of initcode.S
+  p->thread = 0;
 
   safestrcpy(p->name, "initcode", sizeof(p->name));
   p->cwd = namei("/");
@@ -148,6 +149,7 @@ fork(void)
 
   // Clear %eax so that fork returns 0 in the child.
   np->tf->eax = 0;
+  np->thread = 0;
 
   for(i = 0; i < NOFILE; i++)
     if(proc->ofile[i])
@@ -467,5 +469,57 @@ procdump(void)
 
 int
 clone(void(*fcn)(void*), void *arg, void *stack){
-    
+    int i, pid;
+    struct proc *np;
+
+    // Allocate process.
+    if((np = allocproc()) == 0)
+      return -1;
+
+/*    // Copy process state from p.
+    if((np->pgdir = copyuvm(proc->pgdir, proc->sz)) == 0){
+      kfree(np->kstack);
+      np->kstack = 0;
+      np->state = UNUSED;
+      return -1;
+  }*/
+    np->kstack = proc->kstack;
+    np->sz = proc->sz;
+    struct proc *tmp = proc;
+    while(tmp->thread == 1){
+        tmp = tmp->parent;
+    }                           // if parent is also a thread, move up tree until finding primary process
+    *np->parent = *tmp;
+    *np->tf = *proc->tf;
+
+    // Clear %eax so that fork returns 0 in the child.
+    np->tf->eax = 0;  // should clone %eax = 0?
+
+    for(i = 0; i < NOFILE; i++)
+      if(proc->ofile[i])
+        np->ofile[i] = filedup(proc->ofile[i]);
+    np->cwd = idup(proc->cwd);
+    np->thread = 1;             // new process is a thread
+
+    safestrcpy(np->name, proc->name, sizeof(proc->name));
+
+    // temporary array to copy into the bottom of new stack
+    // for the thread (i.e., to the high address in stack
+    // page, since the stack grows downward)
+    uint ustack[2];
+    uint sp = (uint)stack+PGSIZE;
+    ustack[0] = 0xffffffff;     // fake return PC
+    ustack[1] = (uint)arg;
+    sp -= 8;                    // stack grows down by 2 ints/8 bytes
+     if (copyout(np->pgdir, sp, ustack, 8) < 0) {
+       return -1;               // failed to copy bottom of stack into new task
+     }
+     np->tf->eip = (uint)fcn;   // not sure about this?
+     np->tf->esp = sp;
+     switchuvm(np);
+     np->state = RUNNABLE;
+
+    pid = np->pid;
+
+    return pid;
 }
