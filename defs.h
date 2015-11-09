@@ -163,6 +163,13 @@ void            uartinit(void);
 void            uartintr(void);
 void            uartputc(int);
 
+// uthread.c
+int             lock_init(lock_t);
+int             lock_acquire(lock_t);
+int             lock_release(lock_t);
+int             thread_join(int);
+int             thread_creaet(void (*start_routine)(void *), void *arg);
+
 // vm.c
 void            seginit(void);
 void            kvmalloc(void);

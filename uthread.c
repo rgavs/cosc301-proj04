@@ -18,7 +18,9 @@ void lock_release(lock_t *lock) {
 }
 
 int thread_join(int pid) {
+    return 0;
 }
 
 int thread_create(void (*start_routine)(void *), void *arg) {
+    return 0;
 }

@@ -6,6 +6,7 @@
 #include "memlayout.h"
 #include "mmu.h"
 #include "proc.h"
+#include "uthread.c"
 
 int
 sys_fork(void)
@@ -103,4 +104,13 @@ sys_clone(void){
     	return -1;
     }
     return clone((void *)&fcn, &arg, &stack);
+}
+
+int
+sys_join(void){
+    int pid;
+    if(argint(0, &pid) < 0){
+        return -1;
+    }
+    return thread_join(pid);
 }

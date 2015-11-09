@@ -79,9 +79,8 @@ void worker(void *arg_ptr) {
   int tid = (int)(arg_ptr);
   printf(1, "Thread %d started\n", tid);
   while (global != tid) {}
-  global += 1;    
+  global += 1;
   printf(1, "Thread %d incremented the global counter\n", tid);
   sleep(1);
   exit();
 }
-
