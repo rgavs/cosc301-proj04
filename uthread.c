@@ -19,7 +19,8 @@ void lock_release(lock_t *lock) {
 }
 
 int
-thread_join(int pid) {
+thread_join(int pid)
+{
     if(proc->thread == 1)
         return -1;
     struct proc *p;
@@ -33,16 +34,14 @@ thread_join(int pid) {
             if(p->pid == pid){
                 if(p->parent != proc || p->thread != 0)
                     return -1;
-                else
-                    continue;
             }
             havekids = 1;
             if(p->state == ZOMBIE){
               // Found one.
               pid = p->pid;
-              kfree(p->kstack);
-              p->kstack = 0;
-              freevm(p->pgdir);
+              //kfree(p->kstack);
+              //p->kstack = 0;
+              //freevm(p->pgdir);
               p->state = UNUSED;
               p->pid = 0;
               p->parent = 0;
