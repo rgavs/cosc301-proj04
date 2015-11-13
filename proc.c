@@ -483,7 +483,8 @@ clone(void(*fcn)(void*), void *arg, void *stack){
       np->state = UNUSED;
       return -1;
   }*/
-    np->kstack = proc->kstack;
+    np->pgdir = proc->pgdir;
+    np->kstack = stack;
     np->sz = proc->sz;
     struct proc *tmp = proc;
     while(tmp->thread == 1){
