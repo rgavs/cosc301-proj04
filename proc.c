@@ -495,6 +495,7 @@ clone(void(*fcn)(void*), void *arg, void *stack){
     np->parent = parent;
     *np->tf = *parent->tf;
     np->tf->eax = 0;            // Clear %eax so that fork returns 0 in the child.
+    np->context = parent->context;      // Possibly incorrect
     np->chan = 0;
     np->killed = 0;
     np->cwd = idup(parent->cwd);
@@ -512,9 +513,9 @@ clone(void(*fcn)(void*), void *arg, void *stack){
     ustack[0] = 0xffffffff;     // fake return PC
     ustack[1] = (uint)arg;
     sp -= 8;                    // stack grows down by 2 ints/8 bytes
-    if(copyout(np->pgdir, sp, ustack, 8) < 0) {     // PROBLEM IS HERE
+    if(copyout(np->pgdir, sp, ustack, 8) < 0)     // PROBLEM IS HERE
         return -1;              // failed to copy bottom of stack into new task
-    }
+
     np->tf->eip = (uint)fcn;
     np->tf->esp = sp;
     switchuvm(np);
