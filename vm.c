@@ -344,6 +344,7 @@ uva2ka(pde_t *pgdir, char *uva)
   pte_t *pte;
 
   pte = walkpgdir(pgdir, uva, 0);
+  cprintf("pte = %d\n",pte);
   if((*pte & PTE_P) == 0)
     return 0;
   if((*pte & PTE_U) == 0)
@@ -359,7 +360,6 @@ copyout(pde_t *pgdir, uint va, void *p, uint len)
 {
   char *buf, *pa0;
   uint n, va0;
-
   buf = (char*)p;
   while(len > 0){
     va0 = (uint)PGROUNDDOWN(va);
