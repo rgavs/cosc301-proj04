@@ -1,5 +1,5 @@
 /* clone twice, verify everything looks reasonable */
-/*#include "types.h"
+#include "types.h"
 #include "user.h"
 
 #undef NULL
@@ -58,7 +58,7 @@ main(int argc, char *argv[])
   sleep(1);
   while (global < numthreads) {}
   printf(1, "Threads done; now joining all\n");
-
+/*
   // join threads by id
   for (tid=0; tid < numthreads; tid++) {
     int jointhr = join(pids[tid]);
@@ -68,7 +68,7 @@ main(int argc, char *argv[])
   assert(jointhr == -1); // should return -1; no more threads to join
 
   printf(1, "TEST PASSED (mainthread)\n");
-
+*/
   free(start);
   free(pids);
 
@@ -79,9 +79,8 @@ void worker(void *arg_ptr) {
   int tid = (int)(arg_ptr);
   printf(1, "Thread %d started\n", tid);
   while (global != tid) {}
-  global += 1;    
+  global += 1;
   printf(1, "Thread %d incremented the global counter\n", tid);
   sleep(1);
   exit();
 }
-*/
