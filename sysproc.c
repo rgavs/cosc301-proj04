@@ -102,5 +102,5 @@ sys_clone(void){
     if (argint(0, &fcn) < 0) {
     	return -1;
     }
-    return clone((void *)&fcn, &arg, &stack);
+    return clone((void*)&fcn, (void*)arg, (void*)stack);
 }
