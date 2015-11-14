@@ -505,7 +505,8 @@ clone(void(*fcn)(void*), void *arg, void *stack){
 }
 
 int
-join(int pid){
+join(int pid)
+{
     if(proc->thread == 1)
         return -1;
     struct proc *p;
@@ -516,18 +517,14 @@ join(int pid){
         // Scan through table looking child
         havekids = 0;
         for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-            if(p->pid == pid){
+            if(p->pid == pid)
                 if(p->parent != proc || p->thread != 0)
                     return -1;
-            }
             havekids = 1;
             if(p->state == ZOMBIE){
               // Found one.
               pid = p->pid;
-              //kfree(p->kstack);
-              //p->kstack = 0;
-              //freevm(p->pgdir);
-               p->state = UNUSED;
+              p->state = UNUSED;
               p->pid = 0;
               p->parent = 0;
               p->name[0] = 0;

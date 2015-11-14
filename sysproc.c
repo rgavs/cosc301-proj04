@@ -107,7 +107,11 @@ sys_clone(void){
 }
 
 int
-sys_join(void){
+sys_join(void)
+{
     int pid;
-    return (argint(0, &pid) > 0); // needs to be implemented like above
+    if((pid = argint(0, &pid)) < 0)
+        return -1;
+    else
+        return join(pid);
 }
