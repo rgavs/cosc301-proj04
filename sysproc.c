@@ -105,3 +105,9 @@ sys_clone(void){
         return -1;
     return clone((void*)fcn, (void*)arg, (void*)stack);
 }
+
+int
+sys_join(void){
+    int pid;
+    return (argint(0, &pid) > 0); // needs to be implemented like above
+}
