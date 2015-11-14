@@ -468,28 +468,18 @@ int
 clone(void(*fcn)(void*), void *arg, void *stack){
     int i,pid;
     struct proc *np;
-
     // Allocate process.
     if((np = allocproc()) == 0)
         return -1;
     struct proc *parent = proc;
+
     // Initialize np values
     if(parent->thread == 1)         // if parent is also a thread, its parent is a primary process
         parent = parent->parent;
-    np->sz = PGSIZE;
+    np->sz = parent->sz;
     np->pgdir = parent->pgdir;
-    // np->kstack = (char *)stack;
-    //np->pid = 0;
-    // *np->tf = *parent->tf;
-    // np->tf->eax = 0;            // Clear %eax so that fork returns 0 in the child.
-    // np->context = parent->context;      // Possibly incorrect
-    // np->chan = 0;
-    // np->killed = 0;
-    // np->cwd = idup(parent->cwd);
+    *np->tf = *parent->tf;
     np->tf->eax = 0;            // Clear %eax so that fork returns 0 in the child.
-    // np->kstack = (char *)stack; // with this, test1 prints zombie! but still fails - shared address space
-    // np->context = parent->context;      // Possibly incorrect
-    // np->context = (struct context*)fcn;
     for(i = 0; i < NOFILE; i++)
       if(parent->ofile[i])
         np->ofile[i] = parent->ofile[i];
@@ -537,7 +527,7 @@ join(int pid){
               //kfree(p->kstack);
               //p->kstack = 0;
               //freevm(p->pgdir);
-              p->state = UNUSED;
+               p->state = UNUSED;
               p->pid = 0;
               p->parent = 0;
               p->name[0] = 0;
