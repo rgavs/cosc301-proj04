@@ -334,7 +334,6 @@ forkret(void)
     static int first = 1;
     // Still holding ptable.lock from scheduler.
     release(&ptable.lock);
-
     if (first) {
         // Some initialization functions must be run in the context
         // of a regular process (e.g., they call sleep), and thus cannot
@@ -343,7 +342,6 @@ forkret(void)
         iinit(ROOTDEV);
         initlog(ROOTDEV);
     }
-
   // Return to "caller", actually trapret (see allocproc).
 }
 
@@ -474,32 +472,31 @@ clone(void(*fcn)(void*), void *arg, void *stack){
     // Allocate process.
     if((np = allocproc()) == 0)
         return -1;
-    // Copy process state from p.
-    /*if((np->pgdir = copyuvm(parent->pgdir, parent->sz)) == 0){
-        kfree(np->kstack);
-        np->kstack = 0;
-        np->state = UNUSED;
-        return -2;
-    }*/                     // eventually remove
     struct proc *parent = proc;
-
-    // Initialize np values (in order of proc.h)
+    // Initialize np values
     if(parent->thread == 1)         // if parent is also a thread, its parent is a primary process
         parent = parent->parent;
     np->sz = PGSIZE;
     np->pgdir = parent->pgdir;
     np->kstack = (char *)stack;
     //np->pid = 0;
-    np->parent = parent;
     *np->tf = *parent->tf;
     //np->tf->eax = 0;            // Clear %eax so that fork returns 0 in the child.
     // np->context = parent->context;      // Possibly incorrect
     // np->chan = 0;
     // np->killed = 0;
     // np->cwd = idup(parent->cwd);
+    np->sz = parent->sz;
+    np->pgdir = parent->pgdir;
+    *np->tf = *parent->tf;
+    np->tf->eax = 0;            // Clear %eax so that fork returns 0 in the child.
+    // np->kstack = (char *)stack; // with this, test1 prints zombie! but still fails - shared address space
+    // np->context = parent->context;      // Possibly incorrect
+    // np->context = (struct context*)fcn;
     for(i = 0; i < NOFILE; i++)
       if(parent->ofile[i])
-        np->ofile[i] = filedup(parent->ofile[i]);
+        np->ofile[i] = parent->ofile[i];
+    np->cwd = idup(parent->cwd);
     safestrcpy(np->name, parent->name, sizeof(parent->name));
     np->thread = 1;             // new process is a thread
     pid = (np->pid = 0);
