@@ -3,6 +3,7 @@
 #include "fcntl.h"
 #include "user.h"
 #include "x86.h"
+#include "proc.c"
 
 /*
  * This is where you'll need to implement the user-level functions
@@ -38,6 +39,12 @@ thread_join(int pid)
             if(p->state == ZOMBIE){
               // Found one.
               pid = p->pid;
+<<<<<<< HEAD
+=======
+              //kfree(p->kstack);
+              //p->kstack = 0;
+              //freevm(p->pgdir);
+>>>>>>> part2
               p->state = UNUSED;
               p->pid = 0;
               p->parent = 0;
@@ -47,6 +54,7 @@ thread_join(int pid)
               return pid;
           }
       }
+<<<<<<< HEAD
         // No point waiting if we don't have any children.
         if(!havekids || proc->killed){
             release(&ptable.lock);
@@ -54,6 +62,16 @@ thread_join(int pid)
     }
         // Wait for children to exit.  (See wakeup1 call in proc_exit.)
         sleep(proc, &ptable.lock);  //DOC: wait-sleep
+=======
+      /*/ No point waiting if we don't have any children.
+      if(!havekids || proc->killed){
+        release(&ptable.lock);
+        return -1;
+    }*/
+
+      // Wait for children to exit.  (See wakeup1 call in proc_exit.)
+      sleep(proc, &ptable.lock);  //DOC: wait-sleep
+>>>>>>> part2
     }
     return 0;
 }
