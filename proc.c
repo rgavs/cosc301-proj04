@@ -186,7 +186,7 @@ exit(void)
               fileclose(proc->ofile[fd]);
               proc->ofile[fd] = 0;
         }
-  }
+    }
 
     begin_op();
     iput(proc->cwd);
@@ -218,7 +218,7 @@ exit(void)
 int
 wait(void)
 {
-    struct proc *p;
+    struct proc *p,*thread;
     int havekids, pid;
 
     acquire(&ptable.lock);
@@ -232,11 +232,9 @@ wait(void)
         if(p->state == ZOMBIE){
             // Found one.
             //check to see thread
-            for (thread = ptable.proc; thread<&ptable.proc[NPROC]; p++){
-              if (thread->is_thread == 1 && thread ->parent == p){
-                return -1; 
-              }
-            }
+            for (thread = ptable.proc; thread<&ptable.proc[NPROC]; p++)
+                if (thread->thread == 1 && thread ->parent == p)
+                    return -1;
             pid = p->pid;
             kfree(p->kstack);
             p->kstack = 0;
