@@ -109,12 +109,25 @@ int
 growproc(int n)
 {
     uint sz;
-
+    struct proc *p;
     sz = proc->sz;
+    if(proc->thread == 1){
+        for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+            if(proc->parent == p || p->parent == proc->parent){
+                if(n > 0){
+                    if((sz = allocuvm(p->pgdir, sz, sz + n)) == 0)
+                        return -1;
+                }else if(n < 0){
+                    if((sz = deallocuvm(p->pgdir, sz, sz + n)) == 0)
+                        return -1;
+                }
+            }
+        }
+    }
     if(n > 0){
         if((sz = allocuvm(proc->pgdir, sz, sz + n)) == 0)
             return -1;
-    } else if(n < 0){
+    }else if(n < 0){
         if((sz = deallocuvm(proc->pgdir, sz, sz + n)) == 0)
             return -1;
     }
@@ -192,7 +205,6 @@ exit(void)
     iput(proc->cwd);
     end_op();
     proc->cwd = 0;
-
     acquire(&ptable.lock);
 
     // Parent might be sleeping in wait().
@@ -200,7 +212,13 @@ exit(void)
 
     // Pass abandoned children to init.
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-        if(p->parent == proc){
+        if(p->thread == 1){                                 // double check ordering
+              p->killed = 1;
+            if(p->state == SLEEPING)                        // Wake process from sleep if necessary
+                p->state = RUNNABLE;
+            join(p->pid);
+        }
+        else if(p->parent == proc){
             p->parent = initproc;
             if(p->state == ZOMBIE)
                 wakeup1(initproc);
