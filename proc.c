@@ -468,7 +468,7 @@ procdump(void)
 
 int
 clone(void(*fcn)(void*), void *arg, void *stack){
-    int i;
+    int i,pid;
     struct proc *np;
 
     // Allocate process.
@@ -486,25 +486,23 @@ clone(void(*fcn)(void*), void *arg, void *stack){
     // Initialize np values (in order of proc.h)
     if(parent->thread == 1)         // if parent is also a thread, its parent is a primary process
         parent = parent->parent;
-
     np->sz = PGSIZE;
     np->pgdir = parent->pgdir;
     np->kstack = (char *)stack;
-    np->state = EMBRYO;
-    np->pid = 0;
+    //np->pid = 0;
     np->parent = parent;
     *np->tf = *parent->tf;
-    np->tf->eax = 0;            // Clear %eax so that fork returns 0 in the child.
-    np->context = parent->context;      // Possibly incorrect
-    np->chan = 0;
-    np->killed = 0;
-    np->cwd = idup(parent->cwd);
+    //np->tf->eax = 0;            // Clear %eax so that fork returns 0 in the child.
+    // np->context = parent->context;      // Possibly incorrect
+    // np->chan = 0;
+    // np->killed = 0;
+    // np->cwd = idup(parent->cwd);
     for(i = 0; i < NOFILE; i++)
       if(parent->ofile[i])
         np->ofile[i] = filedup(parent->ofile[i]);
     safestrcpy(np->name, parent->name, sizeof(parent->name));
     np->thread = 1;             // new process is a thread
-
+    pid = (np->pid = 0);
     // temporary array to copy into the bottom of new stack
     // for the thread (i.e., to the high address in stack
     // page, since the stack grows downward)
@@ -515,10 +513,9 @@ clone(void(*fcn)(void*), void *arg, void *stack){
     sp -= 8;                    // stack grows down by 2 ints/8 bytes
     if(copyout(np->pgdir, sp, ustack, 8) < 0)     // PROBLEM IS HERE
         return -1;              // failed to copy bottom of stack into new task
-
     np->tf->eip = (uint)fcn;
     np->tf->esp = sp;
     switchuvm(np);
     np->state = RUNNABLE;
-    return np->pid;
+    return pid;
 }
