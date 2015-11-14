@@ -231,6 +231,12 @@ wait(void)
         havekids = 1;
         if(p->state == ZOMBIE){
             // Found one.
+            //check to see thread
+            for (thread = ptable.proc; thread<&ptable.proc[NPROC]; p++){
+              if (thread->is_thread == 1 && thread ->parent == p){
+                return -1; 
+              }
+            }
             pid = p->pid;
             kfree(p->kstack);
             p->kstack = 0;
