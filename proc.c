@@ -548,6 +548,8 @@ join(int pid)
             if(p->state == ZOMBIE){
               // Found one.
               pid = p->pid;
+              kfree(p->kstack);
+              p->kstack = 0;
               p->state = UNUSED;
               p->pid = 0;
               p->parent = 0;
