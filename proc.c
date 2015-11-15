@@ -111,6 +111,7 @@ growproc(int n)
     uint sz;
     struct proc *p;
     sz = proc->sz;
+    acquire(&ptable.lock);
     if(proc->thread == 1){
         for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
             if(proc->parent == p || p->parent == proc->parent){
@@ -132,6 +133,7 @@ growproc(int n)
             return -1;
     }
     proc->sz = sz;
+    release(&ptable.lock);
     switchuvm(proc);
     return 0;
 }
