@@ -489,8 +489,9 @@ procdump(void)
 }
 
 int
-clone(void(*fcn)(void*), void *arg, void *stack){
-    int i,pid;
+clone(void(*fcn)(void*), void *arg, void *stack)
+{
+    int i;
     struct proc *np;
     // Allocate process.
     if((np = allocproc()) == 0)
@@ -503,14 +504,13 @@ clone(void(*fcn)(void*), void *arg, void *stack){
     np->sz = parent->sz;
     np->pgdir = parent->pgdir;
     *np->tf = *parent->tf;
-    np->tf->eax = 0;            // Clear %eax so that fork returns 0 in the child.
+    np->tf->eax = 0;                // Clear %eax so that fork returns 0 in the child.
     for(i = 0; i < NOFILE; i++)
       if(parent->ofile[i])
         np->ofile[i] = parent->ofile[i];
     np->cwd = idup(parent->cwd);
     safestrcpy(np->name, parent->name, sizeof(parent->name));
-    np->thread = 1;             // new process is a thread
-    pid = (np->pid = 0);
+    np->thread = 1;                 // new process is a thread
     // temporary array to copy into the bottom of new stack
     // for the thread (i.e., to the high address in stack
     // page, since the stack grows downward)
@@ -525,7 +525,7 @@ clone(void(*fcn)(void*), void *arg, void *stack){
     np->tf->esp = sp;
     switchuvm(np);
     np->state = RUNNABLE;
-    return pid;
+    return np->pid;
 }
 
 int
