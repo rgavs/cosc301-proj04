@@ -58,7 +58,7 @@ main(int argc, char *argv[])
   sleep(1);
   while (global < numthreads) {}
   printf(1, "Threads done; now joining all\n");
-/*
+
   // join threads by id
   for (tid=0; tid < numthreads; tid++) {
     int jointhr = join(pids[tid]);
@@ -68,7 +68,7 @@ main(int argc, char *argv[])
   assert(jointhr == -1); // should return -1; no more threads to join
 
   printf(1, "TEST PASSED (mainthread)\n");
-*/
+
   free(start);
   free(pids);
 
