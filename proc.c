@@ -531,22 +531,20 @@ clone(void(*fcn)(void*), void *arg, void *stack)
 int
 join(int pid)
 {
-    if(proc->thread == 1)
+    if(proc->thread == 1 || pid < 0)
         return -1;
     struct proc *p;
     int havekids;
-
     acquire(&ptable.lock);
     for(;;){
-        // Scan through table looking child
+        // Scan through table looking for child
         havekids = 0;
         for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
             if(p->pid == pid)
                 if(p->parent != proc || p->thread != 0)
                     return -1;
             havekids = 1;
-            if(p->state == ZOMBIE){
-              // Found one.
+            if(p->state == ZOMBIE){     // Found one.
               pid = p->pid;
               kfree(p->kstack);
               p->kstack = 0;
