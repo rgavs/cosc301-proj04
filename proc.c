@@ -109,22 +109,22 @@ int
 growproc(int n)
 {
     uint sz;
-    struct proc *p;
+    // struct proc *p;
     sz = proc->sz;
     acquire(&ptable.lock);
-    if(proc->thread == 1){
-        for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-            if(proc->parent == p || p->parent == proc->parent){
-                if(n > 0){
-                    if((sz = allocuvm(p->pgdir, sz, sz + n)) == 0)
-                        return -1;
-                }else if(n < 0){
-                    if((sz = deallocuvm(p->pgdir, sz, sz + n)) == 0)
-                        return -1;
-                }
-            }
-        }
-    }
+    // if(proc->thread == 1){
+    //     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+    //         if(proc->parent == p || p->parent == proc->parent){
+    //             if(n > 0){
+    //                 if((sz = allocuvm(p->pgdir, sz, sz + n)) == 0)
+    //                     return -1;
+    //             }else if(n < 0){
+    //                 if((sz = deallocuvm(p->pgdir, sz, sz + n)) == 0)
+    //                     return -1;
+    //             }
+    //         }
+    //     }
+    // }
     if(n > 0){
         if((sz = allocuvm(proc->pgdir, sz, sz + n)) == 0)
             return -1;
@@ -197,7 +197,7 @@ exit(void)
 
     // Close all open files.
     for(fd = 0; fd < NOFILE; fd++){
-        if(proc->ofile[fd]){
+        if(proc->ofile[fd] && proc->thread == 0){
               fileclose(proc->ofile[fd]);
               proc->ofile[fd] = 0;
         }
@@ -215,10 +215,12 @@ exit(void)
     // Pass abandoned children to init.
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
         if(p->thread == 1){                                 // double check ordering
-              p->killed = 1;
+            p->killed = 1;
             if(p->state == SLEEPING)                        // Wake process from sleep if necessary
                 p->state = RUNNABLE;
+            release(&ptable.lock);
             join(p->pid);
+            acquire(&ptable.lock);
         }
         else if(p->parent == proc){
             p->parent = initproc;
@@ -238,7 +240,7 @@ exit(void)
 int
 wait(void)
 {
-    struct proc *p,*thread;
+    struct proc *p;//*thread;
     int havekids, pid;
 
     acquire(&ptable.lock);
@@ -246,15 +248,15 @@ wait(void)
     // Scan through table looking for zombie children.
     havekids = 0;
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-        if(p->parent != proc)
+        if(p->parent != proc && p->thread == 1)
             continue;
         havekids = 1;
         if(p->state == ZOMBIE){
             // Found one.
             //check to see thread
-            for (thread = ptable.proc; thread<&ptable.proc[NPROC]; p++)
-                if (thread->thread == 1 && thread ->parent == p)
-                    return -1;
+            // for (thread = ptable.proc; thread < &ptable.proc[NPROC]; p++)
+            //     if (thread->thread == 1 && thread->parent == p)
+            //         continue;
             pid = p->pid;
             kfree(p->kstack);
             p->kstack = 0;
@@ -531,32 +533,38 @@ clone(void(*fcn)(void*), void *arg, void *stack)
 int
 join(int pid)
 {
+    cprintf("pid = %d\n",pid);
     if(proc->thread == 1 || pid < 0)
         return -1;
     struct proc *p;
     int havekids;
     acquire(&ptable.lock);
+    cprintf("JOINING\n");
     for(;;){
         // Scan through table looking for child
         havekids = 0;
         for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
             if(p->pid == pid)
-                if(p->parent != proc || p->thread != 0)
-                    return -1;
+                if(p->parent == proc && p->thread == 1){
+                    continue;
+                }
+            cprintf("STILL JOINING\n");
             havekids = 1;
             if(p->state == ZOMBIE){     // Found one.
-              pid = p->pid;
-              kfree(p->kstack);
-              p->kstack = 0;
-              p->state = UNUSED;
-              p->pid = 0;
-              p->parent = 0;
-              p->name[0] = 0;
-              p->killed = 0;
-              release(&ptable.lock);
-              return pid;
-          }
-      }
+                cprintf("IT'S A ZOMBIE!\n");
+                pid = p->pid;
+                // kfree(p->kstack);
+                // p->kstack = 0;
+                p->state = UNUSED;
+                p->pid = 0;
+                p->parent = 0;
+                p->name[0] = 0;
+                p->killed = 0;
+                release(&ptable.lock);
+                cprintf("RELEASED\n");
+                return pid;
+            }
+        }
         // No point waiting if we don't have any children.
         if(!havekids || proc->killed){
             release(&ptable.lock);

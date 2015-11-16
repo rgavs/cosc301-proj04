@@ -62,9 +62,13 @@ main(int argc, char *argv[])
   // join threads by id
   for (tid=0; tid < numthreads; tid++) {
     int jointhr = join(pids[tid]);
+    printf(1,"jointhr = %d\n",jointhr);
     assert(jointhr == pids[tid]);
+    printf(1,"%d\n",__LINE__);
   }
+  printf(1,"clonetest2 out of for loop\n");
   int jointhr = join(-1);
+  printf(1,"jointhr = %d\n",jointhr);
   assert(jointhr == -1); // should return -1; no more threads to join
 
   printf(1, "TEST PASSED (mainthread)\n");
