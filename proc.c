@@ -215,7 +215,7 @@ exit(void)
 
     // Pass abandoned children to init.
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-        if(p->thread == 1 && p->parent == proc){                                 // double check ordering
+        if(p->thread == 1 && p->parent == proc){
             p->killed = 1;
             if(p->state == SLEEPING)                        // Wake process from sleep if necessary
                 p->state = RUNNABLE;
@@ -256,11 +256,6 @@ wait(void)
                 continue;
             havekids = 1;
             if(p->state == ZOMBIE){
-                // Found one.
-                //check to see thread
-                // for (thread = ptable.proc; thread < &ptable.proc[NPROC]; p++)
-                //     if (thread->thread == 1 && thread->parent == p)
-                //         continue;
                 pid = p->pid;
                 kfree(p->kstack);
                 p->kstack = 0;
@@ -546,14 +541,12 @@ join(int pid)
     struct proc *p;
     struct proc *child = 0;
     int havekids = 0;
-    if(pid >= 0){
-        for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+    if(pid >= 0)
+        for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
             if(p->parent == proc && p->thread == 1){
                 child = p;
                 break;
             }
-        }
-    }
     for(;;){
         // Scan through table looking for child
         havekids = 0;
