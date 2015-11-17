@@ -110,7 +110,7 @@ int
 sys_join(void)
 {
     int pid;
-    if((pid = argint(0, &pid)) < 0)
+    if(argint(0, &pid) < 0)
         return -1;
     else
         return join(pid);
